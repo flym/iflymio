@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<aspectj>
+    <weaver options="-Xset:weaveJavaxPackages=false -Xlint:ignore -verbose">
+
+        <include within="io.iflym..*"/>
+
+        <exclude within="*..*CGLIB*"/>
+        <exclude within="*..*cglib*"/>
+        <exclude within="*..*JAVASSIST*"/>
+        <exclude within="*..*javassist*"/>
+
+    </weaver>
+
+    <aspects>
+        <aspect name="io.iflym.mybatis.domain.aspect.UpdatableAspect"/>
+
+    </aspects>
+</aspectj>

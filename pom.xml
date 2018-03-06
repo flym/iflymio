@@ -1,0 +1,20 @@
+<project>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>io.iflym</groupId>
+    <artifactId>iflym-framework</artifactId>
+    <version>1.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>iflym framework</name>
+
+    <properties>
+
+    </properties>
+
+    <modules>
+        <module>iflym-parent</module>
+        <module>iflym-core</module>
+        <module>iflym-mybatis</module>
+    </modules>
+
+</project>

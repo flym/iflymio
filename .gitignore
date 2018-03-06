@@ -1,0 +1,14 @@
+# eclipse相关
+.settings/
+.project
+.classpath
+
+# idea相关
+.idea/
+*.iml
+
+# 全局排除
+target/
+
+# 日志
+logs/

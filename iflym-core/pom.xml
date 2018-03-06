@@ -1,0 +1,23 @@
+<project>
+    <parent>
+        <groupId>io.iflym</groupId>
+        <artifactId>iflym-parent</artifactId>
+        <version>1.0.1</version>
+        <relativePath>../iflym-parent/pom.xml</relativePath>
+    </parent>
+
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>iflym-core</artifactId>
+    <version>1.0.3-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <name>iflym core</name>
+
+    <properties>
+
+    </properties>
+
+    <dependencies>
+
+    </dependencies>
+</project>
