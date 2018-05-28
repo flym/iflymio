@@ -22,7 +22,7 @@ import java.util.*;
  * 调用：User user = mapper.selectById(1L, User.class)
  *
  * @author luyi
- * @date 2017/11/24
+ * date 2017/11/24
  */
 @Intercepts(@Signature(
         type = Executor.class,

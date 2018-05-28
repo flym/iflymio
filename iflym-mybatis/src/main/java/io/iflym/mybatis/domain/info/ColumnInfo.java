@@ -19,6 +19,9 @@ import org.springframework.util.StringUtils;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Date;
 import java.util.Map;
 
@@ -190,7 +193,11 @@ public class ColumnInfo {
 
         //时间
         defaultJdbcTypeMap.put(Date.class, JdbcType.TIMESTAMP);
-        //todo 增加jsr310的处理
+
+        //jsr310
+        defaultJdbcTypeMap.put(LocalDate.class, JdbcType.DATE);
+        defaultJdbcTypeMap.put(LocalTime.class, JdbcType.TIME);
+        defaultJdbcTypeMap.put(LocalDateTime.class, JdbcType.TIMESTAMP);
     }
 
     private static JdbcType fromJavaType(Class javaType) {
