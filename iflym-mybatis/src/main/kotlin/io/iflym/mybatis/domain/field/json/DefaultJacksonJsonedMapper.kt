@@ -2,6 +2,8 @@ package io.iflym.mybatis.domain.field.json
 
 import com.fasterxml.jackson.databind.JavaType
 import com.fasterxml.jackson.databind.ObjectMapper
+import java.lang.reflect.Field
+import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 
 
@@ -16,11 +18,10 @@ class DefaultJacksonJsonedMapper(private val objectMapper: ObjectMapper) : Jsone
         return objectMapper.writeValueAsString(jsoned.t1)
     }
 
-    override fun <T> fromStr(str: String): T {
-        //todo 这里的类型未成功处理
-        val type: Type = Class::class.java
+    override fun <T> fromStr(str: String, f: Field): Jsoned<T> {
+        val type: Type = (f.genericType as ParameterizedType).actualTypeArguments[0]
 
         val javaType: JavaType = objectMapper.typeFactory.constructType(type)
-        return objectMapper.readValue<T>(str, javaType)
+        return Jsoned(objectMapper.readValue<T>(str, javaType))
     }
 }

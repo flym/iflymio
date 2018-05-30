@@ -8,6 +8,7 @@ import io.iflym.mybatis.domain.annotation.Column;
 import io.iflym.mybatis.domain.annotation.DeleteTag;
 import io.iflym.mybatis.domain.annotation.Id;
 import io.iflym.mybatis.domain.annotation.UniqueId;
+import io.iflym.mybatis.domain.field.json.Jsoned;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.experimental.var;
@@ -198,6 +199,9 @@ public class ColumnInfo {
         defaultJdbcTypeMap.put(LocalDate.class, JdbcType.DATE);
         defaultJdbcTypeMap.put(LocalTime.class, JdbcType.TIME);
         defaultJdbcTypeMap.put(LocalDateTime.class, JdbcType.TIMESTAMP);
+
+        //jsoned
+        defaultJdbcTypeMap.put(Jsoned.class, JdbcType.VARCHAR);
     }
 
     private static JdbcType fromJavaType(Class javaType) {

@@ -1,9 +1,17 @@
 package io.iflym.mybatis.mybatis.ext;
 
 import io.iflym.core.util.MethodUtils;
+import io.iflym.mybatis.util.JsonedUtils;
 import lombok.val;
+import org.apache.ibatis.executor.Executor;
+import org.apache.ibatis.executor.parameter.ParameterHandler;
+import org.apache.ibatis.executor.resultset.DefaultResultSetHandler;
+import org.apache.ibatis.executor.resultset.ResultSetHandler;
+import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.session.Configuration;
+import org.apache.ibatis.session.ResultHandler;
+import org.apache.ibatis.session.RowBounds;
 import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Method;
@@ -57,6 +65,19 @@ public class ConfigurationExt extends Configuration {
     }
 
     //---------------------------- 替换statement处理 end ------------------------------//
+
+    //---------------------------- 替换resultSetHandler start ------------------------------//
+
+    @Override
+    public ResultSetHandler newResultSetHandler(Executor executor, MappedStatement mappedStatement, RowBounds rowBounds, ParameterHandler parameterHandler, ResultHandler resultHandler, BoundSql boundSql) {
+        DefaultResultSetHandler defaultResultSetHandler = new DefaultResultSetHandler(executor, mappedStatement, parameterHandler, resultHandler, boundSql, rowBounds);
+        ResultSetHandler resultSetHandler = JsonedUtils.INSTANCE.newJsonedResultSetHandler(defaultResultSetHandler);
+        resultSetHandler = (ResultSetHandler) interceptorChain.pluginAll(resultSetHandler);
+        return resultSetHandler;
+    }
+
+
+    //---------------------------- 替换resultSetHandler end ------------------------------//
 
     protected static class StrictMapExt<V> extends StrictMap<V> {
         private static final Method PUT_HASH_MAP = ReflectionUtils.findMethod(HashMap.class, "put", Object.class, Object.class);

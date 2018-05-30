@@ -7,6 +7,8 @@ import io.iflym.core.util.ExceptionUtils;
 import io.iflym.core.util.ObjectUtils;
 import io.iflym.mybatis.criteria.CriteriaSqlSource;
 import io.iflym.mybatis.domain.Entity;
+import io.iflym.mybatis.domain.field.json.Jsoned;
+import io.iflym.mybatis.domain.field.json.JsonedTypeHandler;
 import io.iflym.mybatis.domain.info.EntityInfo;
 import io.iflym.mybatis.domain.info.EntityInfoHolder;
 import io.iflym.mybatis.exception.MybatisException;
@@ -109,6 +111,9 @@ public class MybatisRegister {
     @PostConstruct
     public void init() throws Exception {
         Configuration config = sqlSessionFactory.getConfiguration();
+
+        //注册resultTypeHandler
+        config.getTypeHandlerRegistry().register(Jsoned.class, JsonedTypeHandler.class);
 
         //追加默认的mapper xml
         addMapperXml("classpath:mapper/InternalMapper.xml", config);
