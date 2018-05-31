@@ -11,7 +11,7 @@ import java.lang.reflect.Field
 interface JsonedMapper {
 
     /** 转换为字符串  */
-    fun toStr(jsoned: Jsoned<Any>): String
+    fun <T> toStr(jsoned: Jsoned<T>): String
 
     /** 从字符串之后的数据重新转换回对象  */
     fun <T> fromStr(str: String, f: Field): Jsoned<T>

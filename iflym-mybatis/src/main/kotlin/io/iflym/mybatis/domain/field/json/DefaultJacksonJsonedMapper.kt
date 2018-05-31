@@ -14,7 +14,7 @@ import java.lang.reflect.Type
  */
 class DefaultJacksonJsonedMapper(private val objectMapper: ObjectMapper) : JsonedMapper {
 
-    override fun toStr(jsoned: Jsoned<Any>): String {
+    override fun <T> toStr(jsoned: Jsoned<T>): String {
         return objectMapper.writeValueAsString(jsoned.t1)
     }
 

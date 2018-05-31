@@ -3,6 +3,8 @@ package io.iflym.mybatis.test;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import io.iflym.BaseTest;
+import io.iflym.mybatis.criteria.Criteria;
+import io.iflym.mybatis.criteria.Criterion;
 import io.iflym.mybatis.domain.Key;
 import io.iflym.mybatis.domain.field.json.Jsoned;
 import io.iflym.mybatis.domain.field.json.JsonedMapperFactory;
@@ -16,6 +18,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * 验证jsoned值是否可成功写入和处理
@@ -56,5 +59,15 @@ public class JsonedTest extends BaseTest {
 
         val item3 = jsonedItemMapper.get(Key.of(id));
         Assert.assertEquals(item3.getUserValue().t1, userList2);
+
+        //验证使用criteria查询能够正常查询
+
+        Criteria<JsonedItem> criteria = Criteria.of(JsonedItem.class);
+        criteria.where(Criterion.eq("strValue", new Jsoned<>(str)));
+        List<JsonedItem> list = jsonedItemMapper.listCriteria(criteria);
+
+        //能查询出一条
+        Assert.assertEquals(list.size(), 1);
+        Assert.assertEquals(list.get(0).getStrValue().t1, str);
     }
 }

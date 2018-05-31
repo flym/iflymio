@@ -16,6 +16,7 @@ import io.iflym.mybatis.mapperx.Mapper;
 import io.iflym.mybatis.mapperx.util.MappedStatementUtils;
 import io.iflym.mybatis.mapperx.util.MapperUtils;
 import io.iflym.mybatis.mapperx.util.ResultMapUtils;
+import io.iflym.mybatis.mapperx.util.ResultMappingUtils;
 import io.iflym.mybatis.mybatis.interceptor.PageInterceptor;
 import io.iflym.mybatis.mybatis.interceptor.ResultTypeInterceptor;
 import io.iflym.mybatis.part.PartTree;
@@ -285,14 +286,8 @@ public class MybatisRegister {
      */
     private void addDefaultResultMap(Class<?> clazz, Class entityType, Configuration configuration) {
         val entityInfo = EntityInfoHolder.get(entityType);
-        List<ResultMapping> resultMappingList = entityInfo.getColumnList().stream().map(t -> {
-            val resultMappingBuilder = new ResultMapping.Builder(configuration, t.getPropertyName());
-            resultMappingBuilder.column(t.getColumnName());
-            resultMappingBuilder.javaType(t.getPropertyType());
-            resultMappingBuilder.jdbcType(t.getColumnType());
-            return resultMappingBuilder.build();
-        }).collect(Collectors.toList());
-
+        List<ResultMapping> resultMappingList = entityInfo.getColumnList().stream()
+                .map(t -> ResultMappingUtils.build(configuration, t)).collect(Collectors.toList());
 
         String[] resultMapNames = {concat(clazz.getName(), MAPPER_RESULTMAP_DEFAULT), concat(entityType.getName(), MAPPER_RESULTMAP_DEFAULT)};
         for(String resultMapName : resultMapNames) {
