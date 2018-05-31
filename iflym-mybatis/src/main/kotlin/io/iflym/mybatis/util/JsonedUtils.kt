@@ -1,20 +1,31 @@
 package io.iflym.mybatis.util
 
+import org.apache.ibatis.executor.Executor
+import org.apache.ibatis.executor.parameter.ParameterHandler
 import org.apache.ibatis.executor.resultset.DefaultResultSetHandler
 import org.apache.ibatis.executor.resultset.ResultSetHandler
+import org.apache.ibatis.mapping.BoundSql
+import org.apache.ibatis.mapping.MappedStatement
+import org.apache.ibatis.session.ResultHandler
+import org.apache.ibatis.session.RowBounds
 import org.springframework.util.ClassUtils
 import org.springframework.util.ReflectionUtils
+import java.lang.reflect.Constructor
 import java.lang.reflect.Modifier
 import java.util.concurrent.atomic.AtomicInteger
 
 object JsonedUtils {
     private val postfix: AtomicInteger = AtomicInteger(10001)
 
+    private val clazz by lazy { jsonedClass(DefaultResultSetHandler::class.java) }
+    private val constructor by lazy { jsonedConstructor(clazz) }
+
     /** 构建一个新的支持jsoned处理的resultSetHandler */
-    fun newJsonedResultSetHandler(defaultResultSetHandler: DefaultResultSetHandler): ResultSetHandler {
+    @Suppress("UNCHECKED_CAST")
+    private fun jsonedClass(handlerClass: Class<DefaultResultSetHandler>): Class<ResultSetHandler> {
         val pool = InnerClassPool.defaultPool
         val newName = "org.apache.ibatis.executor.resultset.DefaultResultSetHandler\$Jsoned${postfix.getAndIncrement()}"
-        val ctClass = pool.getAndRename(defaultResultSetHandler.javaClass.name, newName)
+        val ctClass = pool.getAndRename(handlerClass.name, newName)
 
         val insteadClazz = "io.iflym.mybatis.domain.field.json.JsonedSupportedResultSetHandler"
 
@@ -35,18 +46,32 @@ object JsonedUtils {
         ClassPoolUtils.frozen(pool, newName)
 
         val clazz = ClassUtils.forName(newName, pool.classLoader)
-        val instance = clazz.newInstance() as ResultSetHandler
+        return clazz as Class<ResultSetHandler>
 
-        //复制所有默认字段值
-        defaultResultSetHandler.javaClass.declaredFields.forEach { f ->
-            ReflectionUtils.makeAccessible(f)
-            val name = f.name
-            val destF = ReflectionUtils.findField(clazz, name)
-            ReflectionUtils.makeAccessible(destF)
+//        val instance = clazz.newInstance() as ResultSetHandler
+//
+//        //复制所有默认字段值
+//        defaultResultSetHandler.javaClass.declaredFields.forEach { f ->
+//            ReflectionUtils.makeAccessible(f)
+//            val name = f.name
+//            val destF = ReflectionUtils.findField(clazz, name)
+//            ReflectionUtils.makeAccessible(destF)
+//
+//            ReflectionUtils.setField(destF, instance, ReflectionUtils.getField(f, defaultResultSetHandler))
+//        }
+//
+//        return instance
+    }
 
-            ReflectionUtils.setField(destF, instance, ReflectionUtils.getField(f, defaultResultSetHandler))
-        }
+    private fun jsonedConstructor(clazz: Class<ResultSetHandler>): Constructor<ResultSetHandler> {
+        val c = clazz.getConstructor(Executor::class.java, MappedStatement::class.java, ParameterHandler::class.java,
+                ResultHandler::class.java, BoundSql::class.java, RowBounds::class.java)
+        ReflectionUtils.makeAccessible(c)
+        return c
+    }
 
-        return instance
+    fun newJsonedResultSetHandler(executor: Executor, mappedStatement: MappedStatement, parameterHandler: ParameterHandler, resultHandler: ResultHandler<*>?, boundSql: BoundSql,
+                                  rowBounds: RowBounds?): ResultSetHandler {
+        return constructor.newInstance(executor, mappedStatement, parameterHandler, resultHandler, boundSql, rowBounds)
     }
 }

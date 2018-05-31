@@ -5,7 +5,6 @@ import io.iflym.mybatis.util.JsonedUtils;
 import lombok.val;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.executor.parameter.ParameterHandler;
-import org.apache.ibatis.executor.resultset.DefaultResultSetHandler;
 import org.apache.ibatis.executor.resultset.ResultSetHandler;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
@@ -70,8 +69,7 @@ public class ConfigurationExt extends Configuration {
 
     @Override
     public ResultSetHandler newResultSetHandler(Executor executor, MappedStatement mappedStatement, RowBounds rowBounds, ParameterHandler parameterHandler, ResultHandler resultHandler, BoundSql boundSql) {
-        DefaultResultSetHandler defaultResultSetHandler = new DefaultResultSetHandler(executor, mappedStatement, parameterHandler, resultHandler, boundSql, rowBounds);
-        ResultSetHandler resultSetHandler = JsonedUtils.INSTANCE.newJsonedResultSetHandler(defaultResultSetHandler);
+        ResultSetHandler resultSetHandler = JsonedUtils.INSTANCE.newJsonedResultSetHandler(executor, mappedStatement, parameterHandler, resultHandler, boundSql, rowBounds);
         resultSetHandler = (ResultSetHandler) interceptorChain.pluginAll(resultSetHandler);
         return resultSetHandler;
     }

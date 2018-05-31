@@ -1,13 +1,11 @@
 package io.iflym.mybatis.test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import io.iflym.BaseTest;
 import io.iflym.mybatis.criteria.Criteria;
 import io.iflym.mybatis.criteria.Criterion;
 import io.iflym.mybatis.domain.Key;
 import io.iflym.mybatis.domain.field.json.Jsoned;
-import io.iflym.mybatis.domain.field.json.JsonedMapperFactory;
 import io.iflym.mybatis.mapperx.domain.JsonedItem;
 import io.iflym.mybatis.mapperx.mapper.JsonedItemMapper;
 import io.iflym.mybatis.mapperx.vo.User;
@@ -33,8 +31,6 @@ public class JsonedTest extends BaseTest {
     @BeforeClass
     private void prepareTable() throws Exception {
         DbUtils.createTable(jdbcTemplate, null, JsonedItem.TABLE_NAME, JsonedItem.TABLE_DDL);
-        //注册mapper
-        JsonedMapperFactory.INSTANCE.registerDefaultJacksonJsonedMapper(new ObjectMapper());
     }
 
     @Test

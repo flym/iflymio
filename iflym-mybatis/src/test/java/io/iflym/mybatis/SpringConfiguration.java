@@ -1,6 +1,8 @@
 package io.iflym.mybatis;
 
 import com.alibaba.druid.pool.DruidDataSource;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.iflym.mybatis.domain.field.json.JsonedMapperFactory;
 import io.iflym.mybatis.mybatis.ext.ConfigurationExt;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
@@ -13,6 +15,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
 
+import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 
 /**
@@ -59,5 +62,11 @@ public class SpringConfiguration {
         mapperScannerConfigurer.setSqlSessionTemplateBeanName("sqlSessionTemplate");
         mapperScannerConfigurer.setBasePackage("io.iflym.mybatis.**.mapper");
         return mapperScannerConfigurer;
+    }
+
+    @PostConstruct
+    private void init() {
+        //用于在某个地方注册此对象
+        JsonedMapperFactory.INSTANCE.registerDefaultJacksonJsonedMapper(new ObjectMapper());
     }
 }
