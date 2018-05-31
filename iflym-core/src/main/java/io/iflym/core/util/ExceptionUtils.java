@@ -67,11 +67,17 @@ public class ExceptionUtils {
     }
 
     /** 执行有返回操作,如果出现异常,则记录之(并不抛出),并返回null */
+    @Deprecated
     public static <T> T doFunLogE(Fun0<T> fun0) {
+        return doFunLogE(log, fun0);
+    }
+
+    /** 执行有返回操作,如果出现异常,则记录之(并不抛出),并返回null */
+    public static <T> T doFunLogE(Logger logger, Fun0<T> fun0) {
         try{
             return fun0.call();
         } catch(Throwable e) {
-            log.error(e.getMessage(), e);
+            logger.error(e.getMessage(), e);
             return null;
         }
     }
@@ -81,6 +87,17 @@ public class ExceptionUtils {
         try{
             return fun0.call();
         } catch(Throwable e) {
+            Throwables.throwIfUnchecked(e);
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    /** 执行有返回操作,如果出现异常,记录之,同时转换为运行期异常 */
+    public static <T> T doFunLogAndRethrowE(Logger logger, Fun0<T> fun0) {
+        try{
+            return fun0.call();
+        } catch(Throwable e) {
+            logger.error(e.getMessage(), e);
             Throwables.throwIfUnchecked(e);
             throw new RuntimeException(e.getMessage(), e);
         }
