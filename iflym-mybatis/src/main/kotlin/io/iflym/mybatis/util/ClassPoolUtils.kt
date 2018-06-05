@@ -14,8 +14,6 @@ object ClassPoolUtils {
             ctClass.freeze()
             ctClass.toClass()
         }
-
-        ctClass.debugWriteFile("/tmp")
     }
 
     /** 替换相应的方法  */
