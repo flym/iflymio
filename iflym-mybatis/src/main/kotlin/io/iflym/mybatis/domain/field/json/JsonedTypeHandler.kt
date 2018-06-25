@@ -19,7 +19,7 @@ import java.sql.SQLException
  */
 class JsonedTypeHandler : BaseTypeHandler<Jsoned<*>>() {
     @Throws(SQLException::class)
-    override fun setNonNullParameter(ps: PreparedStatement, i: Int, parameter: Jsoned<*>, jdbcType: JdbcType) {
+    override fun setNonNullParameter(ps: PreparedStatement, i: Int, parameter: Jsoned<*>, jdbcType: JdbcType?) {
         ps.setString(i, JsonedMapperFactory.registeredJsonedMapper().toStr(parameter))
     }
 
