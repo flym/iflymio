@@ -132,13 +132,15 @@ public class EntityInfo<T extends Entity> {
      */
     public List<ColumnInfo> getUniqueIdColumnList(String group) {
         if(uniqueKeyColumnMap == null) {
-            uniqueKeyColumnMap = Maps.newHashMap();
+            Map<String, List<ColumnInfo>> tmpMap = Maps.newHashMap();
             getColumnList().stream().filter(ColumnInfo::isUniqueIdColumn).forEach(t -> {
                 val groupName = t.getUniqueId().group();
-                uniqueKeyColumnMap.computeIfAbsent(groupName, any -> Lists.newArrayList()).add(t);
+                tmpMap.computeIfAbsent(groupName, any -> Lists.newArrayList()).add(t);
             });
 
-            uniqueKeyColumnMap.values().forEach(t -> t.sort(uniqueKeyComparator));
+            tmpMap.values().forEach(t -> t.sort(uniqueKeyComparator));
+
+            uniqueKeyColumnMap = tmpMap;
         }
 
         return uniqueKeyColumnMap.getOrDefault(group, Collections.emptyList());
@@ -169,8 +171,9 @@ public class EntityInfo<T extends Entity> {
 
     public ColumnInfo getColumn(String property) {
         if(propertyNameColumnMap == null) {
-            propertyNameColumnMap = Maps.newLinkedHashMap();
-            columnMap.forEach((k, v) -> propertyNameColumnMap.put(k.getName(), v));
+            Map<String, ColumnInfo> tmpMap = Maps.newLinkedHashMap();
+            columnMap.forEach((k, v) -> tmpMap.put(k.getName(), v));
+            propertyNameColumnMap = tmpMap;
         }
 
         return propertyNameColumnMap.get(property);
