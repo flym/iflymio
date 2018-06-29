@@ -10,6 +10,7 @@ import io.iflym.mybatis.domain.Entity;
 import io.iflym.mybatis.domain.Key;
 import io.iflym.mybatis.domain.Page;
 import io.iflym.mybatis.example.Example;
+import io.iflym.mybatis.exception.MybatisException;
 import io.iflym.mybatis.mapperx.AssertExt;
 import io.iflym.mybatis.mapperx.domain.Item;
 import io.iflym.mybatis.mapperx.domain.SubItem;
@@ -280,7 +281,7 @@ public class MapperTest extends BaseTest {
         item26.setUsername("_abc26");
         itemMapper.update(item26);
         val test = itemMapper.get(Key.of(-26));
-        System.out.println("result: "+test.getAge());
+        System.out.println("result: " + test.getAge());
 
         //修改之后,原来的查询不能查询数据
         cnt = countRowsInTableWhere(Item.TABLE_NAME, "username = 'abc26'");
@@ -294,6 +295,18 @@ public class MapperTest extends BaseTest {
         val value = itemMapper.get(Key.of(-26));
         Assert.assertNotNull(value);
         Assert.assertEquals(value.getUsername(), "_abc26");
+    }
+
+    /** 验证调用update时并没有调用upMark的场景 */
+    @Test(expectedExceptions = MybatisException.class)
+    public void testUpdateNotInvokeUpmarkShouldFail() {
+        val item26 = new Item(-26, "abc26", 26, 1);
+        save(itemMapper, item26);
+
+        item26.setAge(-27);
+        item26.setUsername("abc27");
+
+        itemMapper.update(item26);
     }
 
     /**

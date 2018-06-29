@@ -14,6 +14,7 @@ import io.iflym.mybatis.domain.info.ColumnInfo;
 import io.iflym.mybatis.domain.info.EntityInfo;
 import io.iflym.mybatis.domain.info.EntityInfoHolder;
 import io.iflym.mybatis.domain.util.ColumnInfoUtils;
+import io.iflym.mybatis.domain.util.UpdateUtils;
 import io.iflym.mybatis.example.Example;
 import io.iflym.mybatis.exception.MybatisException;
 import io.iflym.mybatis.info.KeyGeneratorFactory;
@@ -213,6 +214,11 @@ public class MapperHelper {
     }
 
     public static <E extends Entity> void update(Mapper<E> mapper, E e) {
+        //如果并没有被标记，但是又调用此方法，则直接报错
+        if(!UpdateUtils.marked(e)) {
+            throw new MybatisException("当前对象并没有调用 upmark 方法进行标记，请检查程序");
+        }
+
         doWithLifecycle(() -> {
             val list = e.updatedItemList();
             if(list.isEmpty()) {
