@@ -295,6 +295,13 @@ public class MapperTest extends BaseTest {
         val value = itemMapper.get(Key.of(-26));
         Assert.assertNotNull(value);
         Assert.assertEquals(value.getUsername(), "_abc26");
+
+        //支持update为null
+        item26.upmark();
+        item26.setUsername(null);
+        itemMapper.update(item26);
+        val testUpdate = itemMapper.get(Key.of(-26));
+        Assert.assertNull(testUpdate.getUsername(), "不能修改为null:" + testUpdate.getUsername());
     }
 
     /** 验证调用update时并没有调用upMark的场景 */
