@@ -100,7 +100,7 @@ public class MybatisRegister {
     private SqlSessionFactory sqlSessionFactory;
 
     @Autowired
-    private List<MapperFactoryBean> mapperFactoryBeanList;
+    private List<MapperFactoryBean> mapperFactoryBeanList = Lists.newArrayList();
 
     public static boolean isStatementOverride(String statement) {
         return !UN_OVERRIDE_MAP.containsKey(statement);
@@ -135,8 +135,10 @@ public class MybatisRegister {
                 throw new MybatisException("相应的mapper类不能正确解析实体.类:" + t);
             }
 
-            //noinspection unchecked
-            EntityInfoHolder.register(EntityInfo.build(entityType));
+            if(!EntityInfoHolder.registered(entityType)) {
+                //noinspection unchecked
+                EntityInfoHolder.register(EntityInfo.build(entityType));
+            }
         });
 
         classList.forEach(clazz -> {
@@ -291,8 +293,11 @@ public class MybatisRegister {
 
         String[] resultMapNames = {concat(clazz.getName(), MAPPER_RESULTMAP_DEFAULT), concat(entityType.getName(), MAPPER_RESULTMAP_DEFAULT)};
         for(String resultMapName : resultMapNames) {
-            ResultMap resultMap = new ResultMap.Builder(configuration, resultMapName, entityType, resultMappingList).build();
-            configuration.addResultMap(resultMap);
+            //因为存在mapper继承的情况，因此可能同一个entity会添加多次,这里进行判断
+            if(!configuration.hasResultMap(resultMapName)) {
+                ResultMap resultMap = new ResultMap.Builder(configuration, resultMapName, entityType, resultMappingList).build();
+                configuration.addResultMap(resultMap);
+            }
         }
     }
 

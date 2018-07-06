@@ -20,4 +20,9 @@ public class EntityInfoHolder {
     public static EntityInfo<?> get(Class clazz) {
         return entityMap.get(clazz);
     }
+
+    /** 此类是否已注册 */
+    public static boolean registered(Class clazz) {
+        return entityMap.containsKey(clazz);
+    }
 }

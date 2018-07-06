@@ -16,6 +16,7 @@ import io.iflym.mybatis.mapperx.domain.Item;
 import io.iflym.mybatis.mapperx.domain.SubItem;
 import io.iflym.mybatis.mapperx.mapper.ItemMapper;
 import io.iflym.mybatis.mapperx.mapper.LegacyMapper;
+import io.iflym.mybatis.mapperx.mapper.SubItemMapper;
 import io.iflym.mybatis.util.DbUtils;
 import lombok.experimental.var;
 import lombok.val;
@@ -35,6 +36,8 @@ public class MapperTest extends BaseTest {
     private ItemMapper itemMapper;
     @Resource
     private LegacyMapper legacyMapper;
+    @Resource
+    private SubItemMapper subItemMapper;
 
     @BeforeClass
     private void prepareTable() throws Exception {
@@ -540,5 +543,32 @@ public class MapperTest extends BaseTest {
         Assert.assertNotNull(result);
 
         Assert.assertEquals(result, item21);
+    }
+
+    /** 验证当一个子mapper继承标准mapper之后 仍然能够工作 */
+    @Test
+    public void testSubMapperWork() {
+        val id = -22;
+        val username = "abc22";
+        val item22 = new Item(id, username, 22, 1);
+        save(itemMapper, item22);
+
+        //使用标准的信息能够查询
+        var result = itemMapper.get(Key.of(id));
+        Assert.assertEquals(result, item22);
+
+        result = itemMapper.getByUsername(username);
+        Assert.assertEquals(result, item22);
+
+        //使用继承的子类仍然能查询
+        result = subItemMapper.get(Key.of(id));
+        Assert.assertEquals(result, item22);
+
+        result = subItemMapper.queryWithUsername(username);
+        Assert.assertEquals(result, item22);
+
+        //使用默认的defaultResultMap 不加前缀
+        result = subItemMapper.queryWithUsernameUseDefaultMap(username);
+        Assert.assertEquals(result, item22);
     }
 }
