@@ -1,11 +1,14 @@
 package io.iflym.mybatis.test;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import io.iflym.BaseTest;
 import io.iflym.mybatis.criteria.Criteria;
 import io.iflym.mybatis.criteria.Criterion;
 import io.iflym.mybatis.domain.Key;
 import io.iflym.mybatis.domain.field.json.Jsoned;
+import io.iflym.mybatis.domain.field.json.jackson.JsonedModule;
+import io.iflym.mybatis.mapperx.AssertExt;
 import io.iflym.mybatis.mapperx.domain.JsonedItem;
 import io.iflym.mybatis.mapperx.mapper.JsonedItemMapper;
 import io.iflym.mybatis.mapperx.vo.User;
@@ -65,5 +68,41 @@ public class JsonedTest extends BaseTest {
         //能查询出一条
         Assert.assertEquals(list.size(), 1);
         Assert.assertEquals(list.get(0).getStrValue().t1, str);
+    }
+
+    /** 验证序列化和反序列化均能正常工作 */
+    @Test
+    public void testJacksonSerializerAndDeserializer() throws Exception {
+        val objectMapper = new ObjectMapper();
+        JsonedModule.INSTANCE.registerJackson(objectMapper);
+
+        val strV = "中文验证";
+
+        val item = new JsonedItem(1, new Jsoned<>(strV), null);
+        val str = objectMapper.writeValueAsString(item);
+
+        //要求数据中不能存在 t1的字符串
+        Assert.assertTrue(!str.contains("\"t1\""), "序列化数据不正确:" + str);
+        Assert.assertTrue(str.contains("\"strValue\""), "序列化数据不正确:" + str);
+
+        val item2 = objectMapper.readValue(str, JsonedItem.class);
+        Assert.assertNotNull(item2.getStrValue());
+        Assert.assertEquals(item2.getStrValue().t1, item.getStrValue().t1);
+
+        val user1 = new User("用户1", "密码1");
+        val user2 = new User("用户1-2", "密码1-2");
+        val list = Lists.newArrayList(user1, user2);
+        val bitem = new JsonedItem(2, new Jsoned<>(strV), new Jsoned<>(list));
+
+        val bstr = objectMapper.writeValueAsString(bitem);
+        //要求数据中不能存在 t1的字符串
+        Assert.assertTrue(!str.contains("\"t1\""), "序列化数据不正确:" + str);
+        Assert.assertTrue(str.contains("\"strValue\""), "序列化数据不正确:" + str);
+        Assert.assertTrue(str.contains("\"userValue\""), "序列化数据不正确:" + str);
+
+        val bitem2 = objectMapper.readValue(bstr, JsonedItem.class);
+        Assert.assertNotNull(bitem2.getStrValue());
+        Assert.assertNotNull(bitem2.getUserValue());
+        AssertExt.assertContentEquals(bitem2.getUserValue().t1, bitem.getUserValue().t1, Object::equals);
     }
 }
