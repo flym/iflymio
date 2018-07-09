@@ -104,5 +104,11 @@ public class JsonedTest extends BaseTest {
         Assert.assertNotNull(bitem2.getStrValue());
         Assert.assertNotNull(bitem2.getUserValue());
         AssertExt.assertContentEquals(bitem2.getUserValue().t1, bitem.getUserValue().t1, Object::equals);
+
+        //验证对null的处理
+        val citem = new JsonedItem(3, new Jsoned<>(null), null);
+        val cstr = objectMapper.writeValueAsString(citem);
+        val citem2 = objectMapper.readValue(cstr, JsonedItem.class);
+        Assert.assertNull(citem2.getStrValue());
     }
 }
