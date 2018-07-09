@@ -43,7 +43,7 @@ class JsonedTypeHandler : BaseTypeHandler<Jsoned<*>>() {
         return JsonedFieldHolder.doWith(field, { getNullableResult(rs, columnName) })
     }
 
-    private fun toJsoned(str: String, columnNameOrIndex: String): Jsoned<*>? {
+    private fun toJsoned(str: String?, columnNameOrIndex: String): Jsoned<*>? {
         return if (ObjectUtils.isEmpty(str)) {
             null
         } else {
@@ -54,7 +54,7 @@ class JsonedTypeHandler : BaseTypeHandler<Jsoned<*>>() {
                 return null
             }
 
-            JsonedMapperFactory.registeredJsonedMapper().fromStr<Jsoned<*>>(str, field)
+            JsonedMapperFactory.registeredJsonedMapper().fromStr<Jsoned<*>>(str!!, field)
         }
     }
 
