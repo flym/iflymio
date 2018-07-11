@@ -17,9 +17,11 @@ import io.iflym.mybatis.mapperx.domain.SubItem;
 import io.iflym.mybatis.mapperx.mapper.ItemMapper;
 import io.iflym.mybatis.mapperx.mapper.LegacyMapper;
 import io.iflym.mybatis.mapperx.mapper.SubItemMapper;
+import io.iflym.mybatis.mapperx.mapper.mapperb.SubXItemMapper;
 import io.iflym.mybatis.util.DbUtils;
 import lombok.experimental.var;
 import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -38,6 +40,12 @@ public class MapperTest extends BaseTest {
     private LegacyMapper legacyMapper;
     @Resource
     private SubItemMapper subItemMapper;
+
+    @Autowired
+    private SubXItemMapper subXItemMapperA;
+
+    @Autowired
+    private io.iflym.mybatis.mapperx.mapper.mappera.SubXItemMapper subXItemMapperB;
 
     @BeforeClass
     private void prepareTable() throws Exception {
@@ -570,5 +578,27 @@ public class MapperTest extends BaseTest {
         //使用默认的defaultResultMap 不加前缀
         result = subItemMapper.queryWithUsernameUseDefaultMap(username);
         Assert.assertEquals(result, item22);
+    }
+
+    /** 验证同一个mapper名字的类继承统一的父类都能正常工作 */
+    @Test
+    public void testSameSubMapperWork() {
+        val id = -23;
+        val username = "abc23";
+        val item23 = new Item(id, username, 23, 1);
+        save(itemMapper, item23);
+
+        val qitem1 = subXItemMapperA.queryWithUsername(username);
+        val qitem2 = subXItemMapperB.queryWithUsername(username);
+
+        Assert.assertEquals(item23, qitem1);
+        Assert.assertEquals(qitem1, qitem2);
+
+        //验证其使用标准的getbyid也能查询
+        val qitem3 = subXItemMapperA.get(Key.of(id));
+        val qitem4 = subXItemMapperB.get(Key.of(id));
+
+        Assert.assertEquals(item23, qitem3);
+        Assert.assertEquals(qitem3, qitem4);
     }
 }
