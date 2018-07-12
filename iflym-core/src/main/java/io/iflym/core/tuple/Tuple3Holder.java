@@ -1,7 +1,9 @@
 package io.iflym.core.tuple;
 
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 /**
  * 包装对3个对象的持有
@@ -11,6 +13,8 @@ import lombok.NoArgsConstructor;
  */
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
+@EqualsAndHashCode
 public class Tuple3Holder<T1, T2, T3> {
     public T1 t1;
     public T2 t2;

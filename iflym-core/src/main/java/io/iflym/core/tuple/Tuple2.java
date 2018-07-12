@@ -1,6 +1,8 @@
 package io.iflym.core.tuple;
 
+import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 
 /**
  * 2对象封装器
@@ -9,6 +11,8 @@ import lombok.RequiredArgsConstructor;
  * Created by flym on 2017/8/30.
  */
 @RequiredArgsConstructor
+@ToString
+@EqualsAndHashCode
 public class Tuple2<T1, T2> {
     public final T1 t1;
     public final T2 t2;
