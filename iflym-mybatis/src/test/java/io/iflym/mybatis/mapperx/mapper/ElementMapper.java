@@ -9,4 +9,5 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface ElementMapper extends Mapper<Element> {
+    Element getByName(String name);
 }

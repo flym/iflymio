@@ -1,6 +1,7 @@
 package io.iflym.mybatis.part
 
 import io.iflym.mybatis.criteria.Criteria
+import io.iflym.mybatis.criteria.Criterion
 import io.iflym.mybatis.criteria.Property
 import io.iflym.mybatis.domain.Entity
 import io.iflym.mybatis.exception.MybatisException
@@ -20,7 +21,7 @@ class PartTree(source: String) {
     init {
         val matcher = PREFIX_TEMPLATE.matcher(source)
         if (!matcher.find()) {
-            throw MybatisException("相应的语句并不是有效的查询语句:" + source)
+            throw MybatisException("相应的语句并不是有效的查询语句:$source")
         } else {
             this.subject = Subject(matcher.group(0))
             this.predicate = Predicate(source.substring(matcher.group().length))
@@ -32,9 +33,14 @@ class PartTree(source: String) {
         val parameter = PartParameter(params)
         val criteria = Criteria.of(entityClass.java)
         criteria.where(predicate.toCriterion(parameter))
+
+        //增加对deleted的支持
+        val deleteTagItem = criteria.entityInfo.deleteTagColumn
+        deleteTagItem?.let { criteria.where(Criterion.notEq(it.propertyName, it.deleteTagVal)) }
+
         if (subject.isCountSubject()) {
             criteria.clearSelect().select(Property.sql("count(1)").setAlias("value"))
-            return criteria;
+            return criteria
         }
         predicate.orderby?.orderList?.forEach { criteria.order(it) }
         return criteria
@@ -42,11 +48,11 @@ class PartTree(source: String) {
 
     companion object {
         /** 匹配词模板,用于分隔关键字  */
-        private val KEYWORD_TEMPLATE = "(%s)(?=\\w)"
+        private const val KEYWORD_TEMPLATE = "(%s)(?=\\w)"
         /** 所支持查询前缀  */
-        private val QUERY_PATTERN = "find|list|get|query"
+        private const val QUERY_PATTERN = "find|list|get|query"
         /** 查询总数 还未支持 todo  */
-        private val COUNT_PATTERN = "count"
+        private const val COUNT_PATTERN = "count"
 
         /** 有效前缀(xxxBy)  */
         private val PREFIX_TEMPLATE = Pattern.compile("^($QUERY_PATTERN|$COUNT_PATTERN).*?By")
@@ -60,7 +66,7 @@ class PartTree(source: String) {
         fun isPartTree(source: String) = PREFIX_TEMPLATE.matcher(source).find()
 
         fun getCountPattern(): String {
-            return COUNT_PATTERN;
+            return COUNT_PATTERN
         }
     }
 }

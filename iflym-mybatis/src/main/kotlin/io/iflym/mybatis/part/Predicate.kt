@@ -18,7 +18,7 @@ class Predicate(predicate: String) {
         val parts = PartTree.split(predicate, KeyWords.ORDER_BY)
 
         if (parts.size > 2) {
-            throw IllegalArgumentException("orderby 最多使用一次:" + predicate)
+            throw IllegalArgumentException("orderby 最多使用一次:$predicate")
         }
 
         buildWhere(parts[0])

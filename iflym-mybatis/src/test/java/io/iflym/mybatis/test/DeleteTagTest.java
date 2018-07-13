@@ -12,6 +12,7 @@ import io.iflym.mybatis.mapperx.mapper.ElementMapper;
 import io.iflym.mybatis.util.DbUtils;
 import lombok.experimental.var;
 import lombok.val;
+import org.springframework.transaction.event.TransactionalEventListener;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -160,6 +161,23 @@ public class DeleteTagTest extends BaseTest {
         criteria.where(Criterion.between("id", 19, 21));
         count = elementMapper.countCriteria(criteria);
         Assert.assertEquals(count, 2);//查询结果数仍然为2
+    }
+
+    /** 验证partTree查询的语义 */
+    @Test
+    public void testPartTree() {
+        val nameExit = "name22";
+        val nameNotExit = "name23";
+
+        Element element22 = new Element(22, nameExit, 1);
+        Element element23 = new Element(23, nameNotExit, 0);
+        save(elementMapper, element22, element23);
+
+        val ele22Tmp = elementMapper.getByName(nameExit);
+        Assert.assertNotNull(ele22Tmp);
+
+        val ele23Tmp = elementMapper.getByName(nameNotExit);
+        Assert.assertNull(ele23Tmp);
     }
 
     /**

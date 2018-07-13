@@ -16,7 +16,7 @@ class PartTreeBoundSql(criteria: Criteria<Entity<*>>, private val config: Config
     init {
         val paramValueList = criteria.fetchParams()
         paramValueList.forEachIndexed { i, pv ->
-            val param = "p" + i
+            val param = "p$i"
             val mapping = ParameterMapping.Builder(config, param, pv.t2).jdbcType(pv.t1).build()
             parameterMappingList.add(mapping)
 

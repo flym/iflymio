@@ -138,6 +138,10 @@ public class ColumnInfo {
         return propertyName;
     }
 
+    public Object getDeleteTagVal() {
+        return deleteTagVal;
+    }
+
     /**
      * 此列是否为主键列
      */
