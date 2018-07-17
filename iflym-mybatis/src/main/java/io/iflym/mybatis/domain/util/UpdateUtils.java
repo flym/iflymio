@@ -85,8 +85,8 @@ public class UpdateUtils {
         void decrementFlag() {
             AtomicInteger atomicInteger = f.get();
             int i = atomicInteger.decrementAndGet();
-            if(i <= 0) {
-                f.remove();
+            if(i < 0) {
+                atomicInteger.set(0);
             }
         }
 

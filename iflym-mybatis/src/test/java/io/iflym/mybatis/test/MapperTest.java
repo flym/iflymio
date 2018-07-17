@@ -9,6 +9,7 @@ import io.iflym.mybatis.criteria.Order;
 import io.iflym.mybatis.domain.Entity;
 import io.iflym.mybatis.domain.Key;
 import io.iflym.mybatis.domain.Page;
+import io.iflym.mybatis.domain.util.UpdateUtils;
 import io.iflym.mybatis.example.Example;
 import io.iflym.mybatis.exception.MybatisException;
 import io.iflym.mybatis.mapperx.AssertExt;
@@ -600,5 +601,44 @@ public class MapperTest extends BaseTest {
 
         Assert.assertEquals(item23, qitem3);
         Assert.assertEquals(qitem3, qitem4);
+    }
+
+    /** 验证相应的nonEmpty在修改时不会对传入的空参数作处理 */
+    @Test
+    public void testNonEmptyUpdate() {
+        val id = -24;
+        val username = "abc24";
+
+        val item24 = new Item(id, username, 24, 1);
+        save(itemMapper, item24);
+
+        //正常修改，能够成功修改
+        item24.upmark();
+        item24.setUsername("abc24-2");
+        itemMapper.update(item24);
+
+        Item qitem = itemMapper.get(Key.of(id));
+        Assert.assertEquals(qitem.getUsername(), "abc24-2");
+
+        val item25 = new Item(-25, "abc25", 25, 1);
+        save(itemMapper, item25);
+
+        //空修改，无变化
+        item25.upmark();
+        //noinspection Convert2Lambda
+        UpdateUtils.nonEmptyUpdate(new Runnable() {
+            @Override
+            public void run() {
+                item25.setUsername(null);
+                item25.setAge(-25);
+            }
+        });
+        itemMapper.update(item25);
+
+        qitem = itemMapper.get(Key.of(-25));
+        //用户名无修改
+        Assert.assertEquals(qitem.getUsername(), "abc25");
+        //age 有变化
+        Assert.assertEquals(qitem.getAge(), -25);
     }
 }
