@@ -6,11 +6,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import io.iflym.mybatis.domain.Updatable;
 import io.iflym.mybatis.domain.UpdateItem;
+import lombok.val;
 
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 用于辅助完成对可更新对象的处理
@@ -49,5 +51,47 @@ public class UpdateUtils {
         return Optional.ofNullable(updatableCache.getIfPresent(updatable))
                 .map(t -> ImmutableList.copyOf(t.values()))
                 .orElse(ImmutableList.of());
+    }
+
+    /**
+     * 在执行update及set方法时，增加对参数的判断，仅将为 nonEmpty的参数进行set调用
+     *
+     * @see io.iflym.core.util.ObjectUtils#isEmpty(Object)
+     */
+    public static void nonEmptyUpdate(Runnable run) {
+        val holder = NonEmptyFlagHolder.INSTANCE;
+        try{
+            holder.incrementFlag();
+            run.run();
+        } finally {
+            holder.decrementFlag();
+        }
+    }
+
+    /** 当前是否启用对nonEmpty的判断 */
+    public static boolean currentNonEmptySet() {
+        return NonEmptyFlagHolder.INSTANCE.requireNonEmpty();
+    }
+
+    private static class NonEmptyFlagHolder {
+        private static final ThreadLocal<AtomicInteger> f = ThreadLocal.withInitial(AtomicInteger::new);
+
+        private static final NonEmptyFlagHolder INSTANCE = new NonEmptyFlagHolder();
+
+        void incrementFlag() {
+            f.get().getAndIncrement();
+        }
+
+        void decrementFlag() {
+            AtomicInteger atomicInteger = f.get();
+            int i = atomicInteger.decrementAndGet();
+            if(i <= 0) {
+                f.remove();
+            }
+        }
+
+        boolean requireNonEmpty() {
+            return f.get().get() > 0;
+        }
     }
 }

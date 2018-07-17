@@ -1,5 +1,6 @@
 package io.iflym.mybatis.domain.aspect;
 
+import io.iflym.core.util.ObjectUtils;
 import io.iflym.mybatis.domain.Entity;
 import io.iflym.mybatis.domain.Updatable;
 import io.iflym.mybatis.domain.info.EntityInfoHolder;
@@ -27,14 +28,24 @@ public class UpdatableAspect {
     @SuppressWarnings({"AroundAdviceStyleInspection", "ArgNamesWarningsInspection"})
     @Around(value = "invokeSetter() && this(self)")
     public void beforeSetter(ProceedingJoinPoint joinPoint, Updatable self) throws Throwable {
+        //标记判断
         if(!UpdateUtils.marked(self)) {
             joinPoint.proceed();
             return;
         }
 
+        //对象类型判断
         if(!(self instanceof Entity)) {
             joinPoint.proceed();
             return;
+        }
+
+        //非空判断
+        if(UpdateUtils.currentNonEmptySet()) {
+            Object p = joinPoint.getArgs()[0];
+            if(ObjectUtils.isEmpty(p)) {
+                return;
+            }
         }
 
         MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
