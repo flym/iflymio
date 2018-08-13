@@ -2,7 +2,6 @@
 package io.iflym.core.util.converter;
 
 import io.iflym.core.util.DateUtils;
-import io.iflym.core.util.ObjectUtils;
 import lombok.val;
 
 import java.util.Date;
@@ -14,12 +13,10 @@ import java.util.function.Function;
  * @author flym
  */
 public class String2DateConverter implements Converter<String, Date> {
+    public static final String2DateConverter INSTANCE = new String2DateConverter();
+
     @Override
     public Date apply(String s) {
-        if(ObjectUtils.isEmpty(s)) {
-            return null;
-        }
-
         @SuppressWarnings("unchecked")
         Date result = trys(s, DateUtils::parseDateTime, DateUtils::parseDate, DateUtils::parseTime);
 

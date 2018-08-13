@@ -1,6 +1,8 @@
 /* Created by flym at 11/20/16 */
 package io.iflym.core.util.converter;
 
+import io.iflym.core.util.DateUtils;
+
 import java.util.Date;
 
 /**
@@ -9,9 +11,11 @@ import java.util.Date;
  * @author flym
  */
 public class Date2StringConverter implements Converter<Date, String> {
+    public static final Date2StringConverter INSTANCE = new Date2StringConverter();
+
     @Override
     public String apply(Date source) {
         //采用默认的格式
-        return null;
+        return DateUtils.formatDateTime(source);
     }
 }

@@ -8,6 +8,9 @@ import io.iflym.core.util.converter.*;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.Date;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -20,6 +23,7 @@ import java.util.function.Supplier;
  *
  * @author flym
  */
+@SuppressWarnings("UnstableApiUsage")
 @Slf4j
 public class ConvertUtils {
     private static final Map<Class, Map<Class, Converter>> CONVERT_MAP = Maps.newIdentityHashMap();
@@ -392,7 +396,7 @@ public class ConvertUtils {
         addConverter(Double.class, char.class, Double2CharConverter.INSTANCE);
         addConverter(Double.class, Character.class, Double2CharConverter.INSTANCE);
 
-        //doubld2float
+        //double2float
         addConverter(double.class, float.class, Double2FloatConverter.INSTANCE);
         addConverter(double.class, Float.class, Double2FloatConverter.INSTANCE);
         addConverter(Double.class, float.class, Double2FloatConverter.INSTANCE);
@@ -402,22 +406,25 @@ public class ConvertUtils {
 
         //----------------------------  字符串与数字之间 start ------------------------------//
         //int类型
-        addGuavaConverter(String.class, Integer.class, Ints.stringConverter());
-        addGuavaConverter(String.class, int.class, Ints.stringConverter());
-        addGuavaConverter(Integer.class, String.class, Ints.stringConverter().reverse());
-        addGuavaConverter(int.class, String.class, Ints.stringConverter().reverse());
+        com.google.common.base.Converter<String, Integer> string2intConverter = Ints.stringConverter();
+        addGuavaConverter(String.class, Integer.class, string2intConverter);
+        addGuavaConverter(String.class, int.class, string2intConverter);
+        addGuavaConverter(Integer.class, String.class, string2intConverter.reverse());
+        addGuavaConverter(int.class, String.class, string2intConverter.reverse());
 
         //long类型
-        addGuavaConverter(String.class, Long.class, Longs.stringConverter());
-        addGuavaConverter(String.class, long.class, Longs.stringConverter());
-        addGuavaConverter(Long.class, String.class, Longs.stringConverter().reverse());
-        addGuavaConverter(long.class, String.class, Longs.stringConverter().reverse());
+        com.google.common.base.Converter<String, Long> string2longConverter = Longs.stringConverter();
+        addGuavaConverter(String.class, Long.class, string2longConverter);
+        addGuavaConverter(String.class, long.class, string2longConverter);
+        addGuavaConverter(Long.class, String.class, string2longConverter.reverse());
+        addGuavaConverter(long.class, String.class, string2longConverter.reverse());
 
         //short
-        addGuavaConverter(String.class, Short.class, Shorts.stringConverter());
-        addGuavaConverter(String.class, short.class, Shorts.stringConverter());
-        addGuavaConverter(Short.class, String.class, Shorts.stringConverter().reverse());
-        addGuavaConverter(short.class, String.class, Shorts.stringConverter().reverse());
+        com.google.common.base.Converter<String, Short> string2shortConverter = Shorts.stringConverter();
+        addGuavaConverter(String.class, Short.class, string2shortConverter);
+        addGuavaConverter(String.class, short.class, string2shortConverter);
+        addGuavaConverter(Short.class, String.class, string2shortConverter.reverse());
+        addGuavaConverter(short.class, String.class, string2shortConverter.reverse());
 
         //byte
         addConverter(String.class, Byte.class, t -> Byte.decode((String) t));
@@ -438,18 +445,35 @@ public class ConvertUtils {
         addConverter(char.class, String.class, Char2StringConverter.INSTANCE);
 
         //float
-        addGuavaConverter(String.class, Float.class, Floats.stringConverter());
-        addGuavaConverter(String.class, float.class, Floats.stringConverter());
-        addGuavaConverter(Float.class, String.class, Floats.stringConverter().reverse());
-        addGuavaConverter(float.class, String.class, Floats.stringConverter().reverse());
+        com.google.common.base.Converter<String, Float> string2floatConverter = Floats.stringConverter();
+        addGuavaConverter(String.class, Float.class, string2floatConverter);
+        addGuavaConverter(String.class, float.class, string2floatConverter);
+        addGuavaConverter(Float.class, String.class, string2floatConverter.reverse());
+        addGuavaConverter(float.class, String.class, string2floatConverter.reverse());
 
         //double
-        addGuavaConverter(String.class, Double.class, Doubles.stringConverter());
-        addGuavaConverter(String.class, double.class, Doubles.stringConverter());
-        addGuavaConverter(Double.class, String.class, Doubles.stringConverter().reverse());
-        addGuavaConverter(double.class, String.class, Doubles.stringConverter().reverse());
+        com.google.common.base.Converter<String, Double> string2doubleConverter = Doubles.stringConverter();
+        addGuavaConverter(String.class, Double.class, string2doubleConverter);
+        addGuavaConverter(String.class, double.class, string2doubleConverter);
+        addGuavaConverter(Double.class, String.class, string2doubleConverter.reverse());
+        addGuavaConverter(double.class, String.class, string2doubleConverter.reverse());
+
+        //bigdecimal
+        addConverter(String.class, BigDecimal.class, String2BigDecimalConverter.INSTANCE);
+        addConverter(BigDecimal.class, String.class, BigDecimal2StringConverter.INSTANCE);
+
+        //biginteger
+        addConverter(String.class, BigInteger.class, String2BigIntegerConverter.INSTANCE);
+        addConverter(BigInteger.class, String.class, BigInteger2StringConverter.INSTANCE);
 
         //----------------------------  字符串与数字之间 end ------------------------------//
+
+        //---------------------------- 时间相关 start ------------------------------//
+
+        addConverter(String.class, Date.class, String2DateConverter.INSTANCE);
+        addConverter(Date.class, String.class, Date2StringConverter.INSTANCE);
+
+        //---------------------------- 时间相关 end ------------------------------//
 
     }
 
@@ -461,12 +485,26 @@ public class ConvertUtils {
     /** 将指定源数据转换为目标类型数据 */
     @SuppressWarnings("unchecked")
     public static <S, D> D convert(S s, Class<D> destType) {
+        return convert(s, destType, () -> null);
+    }
+
+    /** 将指定源数据转换为目标类型数据，如果源值为null, 则启用指定的数据提供器 */
+    @SuppressWarnings("unchecked")
+    public static <D, S> D convert(S s, Class<D> destType, Supplier<D> nullSourceSupplier) {
+        if(s == null) {
+            return nullSourceSupplier.get();
+        }
+
         return convert(s, (Class<S>) s.getClass(), destType);
     }
 
     /** 将指定源数据转换为目标类型数据 */
     @SuppressWarnings("unchecked")
     public static <TS, S extends TS, D> D convert(S s, Class<TS> sourceType, Class<D> destType) {
+        if(s == null) {
+            return null;
+        }
+
         //类型兼容,直接返回原值
         if(destType.isAssignableFrom(sourceType)) {
             return (D) s;
@@ -478,15 +516,6 @@ public class ConvertUtils {
         }
 
         return (D) converter.apply(s);
-    }
-
-    /** 将指定源数据转换为目标类型数据，如果源值为null, 则启用指定的数据提供器 */
-    public static <D, S> D convert(S s, Class<D> destType, Supplier<D> nullSourceSupplier) {
-        if(s == null) {
-            return nullSourceSupplier.get();
-        }
-
-        return convert(s, destType);
     }
 
     public static <S, D> void addConverter(Class<S> sourceClass, Class<D> destClass, Converter converter) {
