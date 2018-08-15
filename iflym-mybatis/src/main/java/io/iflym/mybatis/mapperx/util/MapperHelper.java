@@ -486,30 +486,32 @@ public class MapperHelper {
     }
 
     public static <E extends Entity<E>> void updateByExample(Mapper<E> mapper, Example<E> example) {
-        val entityInfo = EntityInfoHolder.get(MapperUtils.getEntityType(mapper));
+        doWithLifecycle(()->{
+            val entityInfo = EntityInfoHolder.get(MapperUtils.getEntityType(mapper));
 
-        val columnItemMap = example.getColumnItemMap();
-        val columnUpdateItemList = columnItemMap.entrySet().stream().
-                map(t -> new ColumnItem<>(t.getKey().getColumnName(), t.getKey().getColumnType(), t.getValue()))
-                .collect(Collectors.toList());
+            val columnItemMap = example.getColumnItemMap();
+            val columnUpdateItemList = columnItemMap.entrySet().stream().
+                    map(t -> new ColumnItem<>(t.getKey().getColumnName(), t.getKey().getColumnType(), t.getValue()))
+                    .collect(Collectors.toList());
 
-        //如果没更新的数据,则直接略过
-        if(ObjectUtils.isEmpty(columnUpdateItemList)) {
-            log.debug("没有要更新的数据,{}", example);
-            return;
-        }
+            //如果没更新的数据,则直接略过
+            if(ObjectUtils.isEmpty(columnUpdateItemList)) {
+                log.debug("没有要更新的数据,{}", example);
+                return;
+            }
 
-        //惟一主键信息
-        Keyed key = example.fetchKeyed();
-        val idItemList = toKeyedList(key, entityInfo);
+            //惟一主键信息
+            Keyed key = example.fetchKeyed();
+            val idItemList = toKeyedList(key, entityInfo);
 
-        val param = Maps.newHashMap();
-        param.put("table", entityInfo.getTable().getTableName());
-        param.put("updateList", columnUpdateItemList);
-        param.put("idList", idItemList);
+            val param = Maps.newHashMap();
+            param.put("table", entityInfo.getTable().getTableName());
+            param.put("updateList", columnUpdateItemList);
+            param.put("idList", idItemList);
 
-        val sqlSession = MapperUtils.getSqlSession(mapper);
-        val statement = fullStatement(mapper, MAPPER_STATEMENT_UPDATE_WITH_ID);
-        sqlSession.update(statement, param);
+            val sqlSession = MapperUtils.getSqlSession(mapper);
+            val statement = fullStatement(mapper, MAPPER_STATEMENT_UPDATE_WITH_ID);
+            sqlSession.update(statement, param);
+        }, example.getEntity(), Lifecycle::beforeUpdate, Lifecycle::afterUpdate);
     }
 }
