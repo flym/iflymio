@@ -195,7 +195,7 @@ public class MybatisRegister {
             return true;
         }
 
-        //todo 暂时未实现查询inCompleteStatement中的语义,因为其数据不太好查...
+        //暂时未实现查询inCompleteStatement中的语义,因为其数据不太好查...
 
         return false;
     }

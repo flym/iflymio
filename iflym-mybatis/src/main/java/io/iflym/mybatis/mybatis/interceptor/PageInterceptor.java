@@ -186,7 +186,7 @@ public class PageInterceptor implements Interceptor {
         builder.fetchSize(ms.getFetchSize());
         builder.statementType(ms.getStatementType());
         builder.keyGenerator(ms.getKeyGenerator());
-        //todo 这里实际上没有keyProperties信息
+        //这里实际上没有keyProperties信息
         builder.keyProperty("");
         builder.timeout(ms.getTimeout());
         builder.parameterMap(ms.getParameterMap());

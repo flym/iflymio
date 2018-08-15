@@ -39,7 +39,7 @@ class PartTree(source: String) {
         deleteTagItem?.let { criteria.where(Criterion.notEq(it.propertyName, it.deleteTagVal)) }
 
         if (subject.isCountSubject()) {
-            criteria.clearSelect().select(Property.sql("count(1)").setAlias("value"))
+            criteria.clearSelect().select(Property.countOne().setAlias("value"))
             return criteria
         }
         predicate.orderby?.orderList?.forEach { criteria.order(it) }
@@ -51,7 +51,7 @@ class PartTree(source: String) {
         private const val KEYWORD_TEMPLATE = "(%s)(?=\\w)"
         /** 所支持查询前缀  */
         private const val QUERY_PATTERN = "find|list|get|query"
-        /** 查询总数 还未支持 todo  */
+        /** 查询总数 还未支持  */
         private const val COUNT_PATTERN = "count"
 
         /** 有效前缀(xxxBy)  */

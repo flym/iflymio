@@ -344,7 +344,7 @@ public class MapperHelper {
         }
         Criteria countCriteria = criteria.clone();
         //清除对count查询不影响的语句
-        countCriteria.clearSelect().select(Property.sql("count(1)").setAlias("value"))
+        countCriteria.clearSelect().select(Property.countOne().setAlias("value"))
                 .clearOrder()
                 //这句因为可能原来已经有limit了,这里的count查询不需要limit
                 .clearLimit();

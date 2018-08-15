@@ -1,6 +1,7 @@
 package io.iflym.mybatis.criteria;
 
 import io.iflym.mybatis.criteria.property.*;
+import io.iflym.mybatis.mapperx.Sqls;
 
 /**
  * 描述一个具体的查询属性
@@ -82,5 +83,40 @@ public interface Property extends Cloneable {
      */
     static ValueProperty<Integer> constantOne() {
         return constant(1);
+    }
+
+    /** 聚合查询, count */
+    static AggregateProperty count(String property) {
+        return new AggregateProperty(Sqls.COUNT, property);
+    }
+
+    /** 聚合查询, count distinct */
+    static CountDistinctAggregateProperty countDistinct(String property) {
+        return new CountDistinctAggregateProperty(property);
+    }
+
+    /** 聚合查询 count 1 */
+    static CountOneAggregateProperty countOne() {
+        return new CountOneAggregateProperty();
+    }
+
+    /** 聚合查询, max */
+    static AggregateProperty max(String property) {
+        return new AggregateProperty(Sqls.MAX, property);
+    }
+
+    /** 聚合查询, min */
+    static AggregateProperty min(String property) {
+        return new AggregateProperty(Sqls.MIN, property);
+    }
+
+    /** 聚合查询, avg */
+    static AggregateProperty avg(String property) {
+        return new AggregateProperty(Sqls.AVG, property);
+    }
+
+    /** 聚合查询, sum */
+    static AggregateProperty sum(String property) {
+        return new AggregateProperty(Sqls.SUM, property);
     }
 }

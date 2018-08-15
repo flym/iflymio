@@ -134,6 +134,20 @@ public interface Sqls {
     String DESC = "desc";
 
     /** 函数中的count */
-    String COUNT = " count ";
+    String COUNT = "count";
 
+    /** 函数中的 max */
+    String MAX = "max";
+
+    /** 函数中的 min */
+    String MIN = "min";
+
+    /** 函数中 avg */
+    String AVG = "avg";
+
+    /** 函数中的sum */
+    String SUM = "sum";
+
+    /** 聚合中的 distinct */
+    String DISTINCT = " distinct ";
 }
