@@ -16,7 +16,7 @@ import io.iflym.mybatis.domain.util.ColumnInfoUtils
  * @date 2017/12/7
  */
 @Suppress("FINITE_BOUNDS_VIOLATION_IN_JAVA")
-class Example<T : Entity<T>> private constructor(private var entity: T) {
+class Example<T : Entity<T>> private constructor(val entity: T) {
 
     /** 属性选择器 */
     private val selectorSet: MutableSet<PropertySelector> = mutableSetOf()
@@ -105,7 +105,7 @@ class Example<T : Entity<T>> private constructor(private var entity: T) {
         entityInfo.columnList.forEach {
             val v = ColumnInfoUtils.get<Any?>(it, entity)
             if(!it.isIdColumn && isPropertyIncluded(it.propertyName, v))
-                map.put(it, v)
+                map[it] = v
         }
 
         return map

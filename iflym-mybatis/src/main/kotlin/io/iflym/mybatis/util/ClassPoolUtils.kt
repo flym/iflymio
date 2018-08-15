@@ -32,7 +32,7 @@ object ClassPoolUtils {
 
     /** 添加一个默认的构造函数 */
     fun addDefaultConstructor(ctClass: CtClass) {
-        if (ctClass.constructors.any({ it.isConstructor && it.parameterTypes.isEmpty() }))
+        if (ctClass.constructors.any { it.isConstructor && it.parameterTypes.isEmpty() })
             return
 
         val ctConstructor = CtConstructor(emptyArray(), ctClass)

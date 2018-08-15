@@ -13,10 +13,10 @@ object KeyGeneratorFactory {
     /** 获取相应的类型的实例 */
     @Suppress("UNCHECKED_CAST")
     fun <T : KeyGenerator<*, *>> getKeyGenerator(clazz: Class<T>): T {
-        return generatorMap.getOrPut(clazz, {
+        return generatorMap.getOrPut(clazz) {
             val v = clazz.newInstance()
             v.init()
             return v
-        }) as T
+        } as T
     }
 }

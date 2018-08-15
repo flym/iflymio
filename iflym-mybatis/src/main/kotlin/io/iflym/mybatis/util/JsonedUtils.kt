@@ -47,20 +47,6 @@ object JsonedUtils {
 
         val clazz = ClassUtils.forName(newName, pool.classLoader)
         return clazz as Class<ResultSetHandler>
-
-//        val instance = clazz.newInstance() as ResultSetHandler
-//
-//        //复制所有默认字段值
-//        defaultResultSetHandler.javaClass.declaredFields.forEach { f ->
-//            ReflectionUtils.makeAccessible(f)
-//            val name = f.name
-//            val destF = ReflectionUtils.findField(clazz, name)
-//            ReflectionUtils.makeAccessible(destF)
-//
-//            ReflectionUtils.setField(destF, instance, ReflectionUtils.getField(f, defaultResultSetHandler))
-//        }
-//
-//        return instance
     }
 
     private fun jsonedConstructor(clazz: Class<ResultSetHandler>): Constructor<ResultSetHandler> {
