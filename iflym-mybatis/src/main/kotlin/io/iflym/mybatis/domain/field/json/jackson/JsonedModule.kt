@@ -10,7 +10,6 @@ object JsonedModule {
     /** 注册相应的模块信息 */
     fun registerJackson(objectMapper: ObjectMapper) {
         val deserializer = JsonedDeserializer<Any>()
-        deserializer.bindObjectMapper(objectMapper)
 
         val serializer = JsonedSerializer<Any>()
 
@@ -20,5 +19,7 @@ object JsonedModule {
         jsonValueModule.addDeserializer(Jsoned::class.java, deserializer)
 
         objectMapper.registerModule(jsonValueModule)
+
+        deserializer.bindObjectMapper(objectMapper)
     }
 }
