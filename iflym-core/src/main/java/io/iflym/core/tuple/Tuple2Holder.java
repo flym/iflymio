@@ -1,9 +1,6 @@
 package io.iflym.core.tuple;
 
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 
 /**
  * 包装对2个对象的持有
@@ -15,6 +12,8 @@ import lombok.ToString;
 @AllArgsConstructor
 @ToString
 @EqualsAndHashCode
+@Setter
+@Getter
 public class Tuple2Holder<T1, T2> {
     public T1 t1;
     public T2 t2;

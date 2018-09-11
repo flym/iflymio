@@ -1,6 +1,7 @@
 package io.iflym.core.tuple;
 
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 
@@ -13,6 +14,7 @@ import lombok.ToString;
 @RequiredArgsConstructor
 @ToString
 @EqualsAndHashCode
+@Getter
 public class Tuple1<T1> {
     public final T1 t1;
 }
