@@ -485,13 +485,7 @@ public class DateUtils {
     }
 
     public static Date truncate(Date date) {
-        Calendar calendar = getCalendar(date);
-        calendar.set(Calendar.HOUR, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
-
-        return calendar.getTime();
+        return dayStart(date);
     }
 
     /**
