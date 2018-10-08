@@ -58,6 +58,10 @@ public class MapperUtils {
 
     @SuppressWarnings("unchecked")
     public static <T extends Mapper> Class<T> getMapperClass(Mapper mapper) {
+        if(!Proxy.isProxyClass(mapper.getClass())) {
+            return (Class<T>) mapper.getClass();
+        }
+
         MapperProxy mapperProxy = (MapperProxy) Proxy.getInvocationHandler(mapper);
 
         try{

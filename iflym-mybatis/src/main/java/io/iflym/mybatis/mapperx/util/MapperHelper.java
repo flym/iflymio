@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static io.iflym.mybatis.mybatis.MybatisRegister.*;
@@ -48,7 +49,7 @@ public class MapperHelper {
 
     @SuppressWarnings("unchecked")
     public static <T extends Entity> void save(Mapper<T> mapper, T t) {
-        doWithLifecycle(() -> {
+        Runnable run = () -> doWithLifecycle(() -> {
             val entityInfo = EntityInfoHolder.get(MapperUtils.getEntityType(mapper));
 
             List<ColumnItem> insertList;
@@ -106,111 +107,135 @@ public class MapperHelper {
             }
 
         }, t, Lifecycle::beforeSave, Lifecycle::afterSave);
+
+        MapperLogHelper.runWithinMapperLog(mapper, "save", run);
     }
 
     @SuppressWarnings("unchecked")
     public static <E extends Entity, T> T get(Mapper<E> mapper, UniqueKey uniqueKey, Class<T> resultType) {
-        val param = Maps.newHashMap();
-        val entityInfo = EntityInfoHolder.get(MapperUtils.getEntityType(mapper));
+        Supplier<T> supplier = () -> {
+            val param = Maps.newHashMap();
+            val entityInfo = EntityInfoHolder.get(MapperUtils.getEntityType(mapper));
 
-        val selectList = ListUtils.map(entityInfo.getColumnList(), ColumnItem::build);
-        val ukList = toUkList(uniqueKey, entityInfo);
-        val deleteTagItem = toDeleteTagItem(entityInfo.getDeleteTagColumn());
+            val selectList = ListUtils.map(entityInfo.getColumnList(), ColumnItem::build);
+            val ukList = toUkList(uniqueKey, entityInfo);
+            val deleteTagItem = toDeleteTagItem(entityInfo.getDeleteTagColumn());
 
-        param.put("table", entityInfo.getTable().getTableName());
-        param.put("selectList", selectList);
-        param.put("ukList", ukList);
-        param.put("deleteTagItem", deleteTagItem);
-        //支持调整结果类型
-        if(resultType != null) {
-            param.put("resultType", resultType);
-        }
+            param.put("table", entityInfo.getTable().getTableName());
+            param.put("selectList", selectList);
+            param.put("ukList", ukList);
+            param.put("deleteTagItem", deleteTagItem);
+            //支持调整结果类型
+            if(resultType != null) {
+                param.put("resultType", resultType);
+            }
 
-        val sqlSession = MapperUtils.getSqlSession(mapper);
-        String statement = fullStatement(mapper, MAPPER_STATEMENT_GET_WITH_UKEY);
+            val sqlSession = MapperUtils.getSqlSession(mapper);
+            String statement = fullStatement(mapper, MAPPER_STATEMENT_GET_WITH_UKEY);
 
-        return sqlSession.selectOne(statement, param);
+            return sqlSession.selectOne(statement, param);
+        };
+
+        return MapperLogHelper.callWithinMapperLog(mapper, "get", supplier);
     }
 
     @SuppressWarnings("unchecked")
     public static <E extends Entity, T> T get(Mapper<E> mapper, Key key, Class<T> resultType) {
+        Supplier<T> supplier = () -> {
+            val param = Maps.<String, Object>newHashMap();
+            //支持调整结果类型
+            if(resultType != null) {
+                param.put("resultType", resultType);
+            }
+            innerGetHandler(mapper, key, param);
 
-        val param = Maps.<String, Object>newHashMap();
-        //支持调整结果类型
-        if(resultType != null) {
-            param.put("resultType", resultType);
-        }
-        innerGetHandler(mapper, key, param);
+            val sqlSession = MapperUtils.getSqlSession(mapper);
+            String statement = fullStatement(mapper, MAPPER_STATEMENT_GET_WITH_ID);
 
-        val sqlSession = MapperUtils.getSqlSession(mapper);
-        String statement = fullStatement(mapper, MAPPER_STATEMENT_GET_WITH_ID);
+            return sqlSession.selectOne(statement, param);
+        };
 
-        return sqlSession.selectOne(statement, param);
+        return MapperLogHelper.callWithinMapperLog(mapper, "get", supplier);
     }
 
     public static <E extends Entity> List<E> getMulti(Mapper<E> mapper, List<Key> keyList) {
+        Supplier<List<E>> supplier = () -> {
+            val param = Maps.<String, Object>newHashMap();
+            innerGetMultiHandler(mapper, keyList, param);
 
-        val param = Maps.<String, Object>newHashMap();
-        innerGetMultiHandler(mapper, keyList, param);
+            String statement = fullStatement(mapper, MAPPER_STATEMENT_GETMULTI_WITH_ID);
+            val sqlSession = MapperUtils.getSqlSession(mapper);
 
-        String statement = fullStatement(mapper, MAPPER_STATEMENT_GETMULTI_WITH_ID);
-        val sqlSession = MapperUtils.getSqlSession(mapper);
+            return sqlSession.selectList(statement, param);
+        };
 
-        return sqlSession.selectList(statement, param);
+        return MapperLogHelper.callWithinMapperLog(mapper, "getMulti", supplier);
     }
 
     public static <E extends Entity, T> List<T> getMulti(Mapper<E> mapper, List<Key> keyList, Class<T> resultType) {
+        Supplier<List<T>> supplier = () -> {
+            val param = Maps.<String, Object>newHashMap();
+            assert resultType != null;
+            param.put("resultType", resultType);
+            innerGetMultiHandler(mapper, keyList, param);
 
-        val param = Maps.<String, Object>newHashMap();
-        assert resultType != null;
-        param.put("resultType", resultType);
-        innerGetMultiHandler(mapper, keyList, param);
+            String statement = fullStatement(mapper, MAPPER_STATEMENT_GETMULTI_WITH_ID);
+            val sqlSession = MapperUtils.getSqlSession(mapper);
 
-        String statement = fullStatement(mapper, MAPPER_STATEMENT_GETMULTI_WITH_ID);
-        val sqlSession = MapperUtils.getSqlSession(mapper);
+            return sqlSession.selectList(statement, param);
+        };
 
-        return sqlSession.selectList(statement, param);
+        return MapperLogHelper.callWithinMapperLog(mapper, "getMulti", supplier);
     }
 
     public static <T extends Entity> boolean exists(Mapper<T> mapper, Key key) {
-        val entityInfo = EntityInfoHolder.get(MapperUtils.getEntityType(mapper));
+        Supplier<Boolean> supplier = () -> {
+            val entityInfo = EntityInfoHolder.get(MapperUtils.getEntityType(mapper));
 
-        val idList = toIdList(key, entityInfo);
-        val deleteTagItem = toDeleteTagItem(entityInfo.getDeleteTagColumn());
+            val idList = toIdList(key, entityInfo);
+            val deleteTagItem = toDeleteTagItem(entityInfo.getDeleteTagColumn());
 
-        val param = Maps.newHashMap();
-        param.put("table", entityInfo.getTable().getTableName());
-        param.put("idList", idList);
-        param.put("deleteTagItem", deleteTagItem);
-
-        val sqlSession = MapperUtils.getSqlSession(mapper);
-        String statement = fullStatement(mapper, MAPPER_STATEMENT_EXISTS_WITH_ID);
-
-        return (Boolean) sqlSession.selectOne(statement, param);
-    }
-
-    public static <T extends Entity> void delete(Mapper<T> mapper, T entity, Key key) {
-        val entityInfo = EntityInfoHolder.get(MapperUtils.getEntityType(mapper));
-
-        val idList = toIdList(key, entityInfo);
-
-        val deleteTagColumn = entityInfo.getDeleteTagColumn();
-        //如果存在状态字段，则不进行物理删除操作，只更新状态字段（逻辑删除）
-        if(!ObjectUtils.isEmpty(deleteTagColumn)) {
-            updateDeleteTag(mapper, key, deleteTagColumn);
-            return;
-        }
-
-        doWithLifecycle(() -> {
             val param = Maps.newHashMap();
             param.put("table", entityInfo.getTable().getTableName());
             param.put("idList", idList);
+            param.put("deleteTagItem", deleteTagItem);
 
             val sqlSession = MapperUtils.getSqlSession(mapper);
-            String statement = fullStatement(mapper, MAPPER_STATEMENT_DELETE_WITH_ID);
+            String statement = fullStatement(mapper, MAPPER_STATEMENT_EXISTS_WITH_ID);
 
-            sqlSession.delete(statement, param);
-        }, entity, Entity::beforeDelete, Entity::afterDelete);
+            return sqlSession.selectOne(statement, param);
+        };
+
+        return MapperLogHelper.callWithinMapperLog(mapper, "exists", supplier);
+    }
+
+    public static <T extends Entity> void delete(Mapper<T> mapper, T entity, Key key) {
+        Runnable run = () -> {
+            val entityInfo = EntityInfoHolder.get(MapperUtils.getEntityType(mapper));
+
+            val idList = toIdList(key, entityInfo);
+
+            val deleteTagColumn = entityInfo.getDeleteTagColumn();
+            //如果存在状态字段，则不进行物理删除操作，只更新状态字段（逻辑删除）
+            if(!ObjectUtils.isEmpty(deleteTagColumn)) {
+                updateDeleteTag(mapper, key, deleteTagColumn);
+                return;
+            }
+
+            doWithLifecycle(() -> {
+                val param = Maps.newHashMap();
+                param.put("table", entityInfo.getTable().getTableName());
+                param.put("idList", idList);
+
+                val sqlSession = MapperUtils.getSqlSession(mapper);
+                String statement = fullStatement(mapper, MAPPER_STATEMENT_DELETE_WITH_ID);
+
+                sqlSession.delete(statement, param);
+            }, entity, Entity::beforeDelete, Entity::afterDelete);
+
+        };
+
+        MapperLogHelper.runWithinMapperLog(mapper, "delete", run);
     }
 
     public static <E extends Entity> void update(Mapper<E> mapper, E e) {
@@ -219,7 +244,7 @@ public class MapperHelper {
             throw new MybatisException("当前对象并没有调用 upmark 方法进行标记，请检查程序");
         }
 
-        doWithLifecycle(() -> {
+        Runnable runnable = () -> doWithLifecycle(() -> {
             val list = e.updatedItemList();
             if(list.isEmpty()) {
                 return;
@@ -245,7 +270,121 @@ public class MapperHelper {
             val statement = fullStatement(mapper, MAPPER_STATEMENT_UPDATE_WITH_ID);
             sqlSession.update(statement, param);
         }, e, Lifecycle::beforeUpdate, Lifecycle::afterUpdate);
+
+        MapperLogHelper.runWithinMapperLog(mapper, "update", runnable);
     }
+
+    public static <E extends Entity<E>> void updateByExample(Mapper<E> mapper, Example<E> example) {
+        Runnable runnable = () -> doWithLifecycle(() -> {
+            val entityInfo = EntityInfoHolder.get(MapperUtils.getEntityType(mapper));
+
+            val columnItemMap = example.getColumnItemMap();
+            val columnUpdateItemList = columnItemMap.entrySet().stream().
+                    map(t -> new ColumnItem<>(t.getKey().getColumnName(), t.getKey().getColumnType(), t.getValue()))
+                    .collect(Collectors.toList());
+
+            //如果没更新的数据,则直接略过
+            if(ObjectUtils.isEmpty(columnUpdateItemList)) {
+                log.debug("没有要更新的数据,{}", example);
+                return;
+            }
+
+            //惟一主键信息
+            Keyed key = example.fetchKeyed();
+            val idItemList = toKeyedList(key, entityInfo);
+
+            val param = Maps.newHashMap();
+            param.put("table", entityInfo.getTable().getTableName());
+            param.put("updateList", columnUpdateItemList);
+            param.put("idList", idItemList);
+
+            val sqlSession = MapperUtils.getSqlSession(mapper);
+            val statement = fullStatement(mapper, MAPPER_STATEMENT_UPDATE_WITH_ID);
+            sqlSession.update(statement, param);
+        }, example.getEntity(), Lifecycle::beforeUpdate, Lifecycle::afterUpdate);
+
+        MapperLogHelper.runWithinMapperLog(mapper, "updateByexample", runnable);
+    }
+
+    public static <E extends Entity> int countCriteria(Mapper<E> mapper, Criteria<E> criteria) {
+        Supplier<Integer> supplier = () -> {
+            val entityInfo = EntityInfoHolder.get(MapperUtils.getEntityType(mapper));
+            val deleteTagColumn = entityInfo.getDeleteTagColumn();
+            if(deleteTagColumn != null) {
+                criteria.where(Criterion.notEq(deleteTagColumn.getPropertyName(), deleteTagColumn.getDeleteTagVal()));
+            }
+            Criteria countCriteria = criteria.clone();
+            //清除对count查询不影响的语句
+            countCriteria.clearSelect().select(Property.countOne().setAlias("value"))
+                    .clearOrder()
+                    //这句因为可能原来已经有limit了,这里的count查询不需要limit
+                    .clearLimit();
+
+            Map<String, Object> map = Maps.newHashMap();
+            map.put("sql", countCriteria.toSql());
+            map.put(CriteriaBoundSql.PARAM_VALUE_KEY_NAME, countCriteria.fetchParams());
+
+            val sqlSession = MapperUtils.getSqlSession(mapper);
+            val statement = fullStatement(mapper, MAPPER_STATEMENT_COUNT_CRITERIA);
+
+            return sqlSession.selectOne(statement, map);
+        };
+
+        return MapperLogHelper.callWithinMapperLog(mapper, "countCriteria", supplier);
+    }
+
+    public static <E extends Entity> List<E> listPage(Mapper<E> mapper, Page page) {
+        Supplier<List<E>> supplier = () -> {
+            val param = Maps.<String, Object>newHashMap();
+            innerListPageHandler(mapper, param);
+
+            val sqlSession = MapperUtils.getSqlSession(mapper);
+            String statement = fullStatement(mapper, MAPPER_STATEMENT_LIST_PAGE);
+
+            return sqlSession.selectList(statement, param, page);
+        };
+
+        return MapperLogHelper.callWithinMapperLog(mapper, "listPage", supplier);
+    }
+
+    public static <E extends Entity, T> List<T> listPage(Mapper<E> mapper, Page page, Class<T> resultType) {
+        Supplier<List<T>> supplier = () -> {
+            val param = Maps.<String, Object>newHashMap();
+            assert resultType != null;
+            param.put("resultType", resultType);
+            innerListPageHandler(mapper, param);
+
+            val sqlSession = MapperUtils.getSqlSession(mapper);
+            String statement = fullStatement(mapper, MAPPER_STATEMENT_LIST_PAGE);
+
+            return sqlSession.selectList(statement, param, page);
+        };
+
+        return MapperLogHelper.callWithinMapperLog(mapper, "listPage", supplier);
+    }
+
+    public static <E extends Entity> List<E> listCriteria(Mapper<E> mapper, Criteria<E> criteria) {
+        Supplier<List<E>> supplier = () -> {
+            val entityInfo = EntityInfoHolder.get(MapperUtils.getEntityType(mapper));
+            val deleteTagItem = entityInfo.getDeleteTagColumn();
+            if(deleteTagItem != null) {
+                criteria.where(Criterion.notEq(deleteTagItem.getPropertyName(), deleteTagItem.getDeleteTagVal()));
+            }
+            Map<String, Object> map = Maps.newHashMap();
+            map.put("sql", criteria.toSql());
+
+            map.put(CriteriaBoundSql.PARAM_VALUE_KEY_NAME, criteria.fetchParams());
+
+            val sqlSession = MapperUtils.getSqlSession(mapper);
+            val statement = fullStatement(mapper, MAPPER_STATEMENT_LIST_CRITERIA);
+
+            return sqlSession.selectList(statement, map);
+        };
+
+        return MapperLogHelper.callWithinMapperLog(mapper, "listCriteria", supplier);
+    }
+
+    //---------------------------- private method start ------------------------------//
 
     private static <E extends Entity> void updateDeleteTag(Mapper<E> mapper, Key key, ColumnInfo deleteTagColumn) {
         val entityInfo = EntityInfoHolder.get(MapperUtils.getEntityType(mapper));
@@ -316,71 +455,6 @@ public class MapperHelper {
         val currentMapper = MapperUtils.getMapperClass(mapper);
         val prefix = MybatisRegister.isStatementOverride(simpleName) ? currentMapper.getName() : MAPPER_INTERNAL_NAMESPACE;
         return prefix + "." + simpleName;
-    }
-
-    public static <E extends Entity> List<E> listCriteria(Mapper<E> mapper, Criteria<E> criteria) {
-        val entityInfo = EntityInfoHolder.get(MapperUtils.getEntityType(mapper));
-        val deleteTagItem = entityInfo.getDeleteTagColumn();
-        if(deleteTagItem != null) {
-            criteria.where(Criterion.notEq(deleteTagItem.getPropertyName(), deleteTagItem.getDeleteTagVal()));
-        }
-        Map<String, Object> map = Maps.newHashMap();
-        map.put("sql", criteria.toSql());
-
-        map.put(CriteriaBoundSql.PARAM_VALUE_KEY_NAME, criteria.fetchParams());
-
-        val sqlSession = MapperUtils.getSqlSession(mapper);
-        val statement = fullStatement(mapper, MAPPER_STATEMENT_LIST_CRITERIA);
-
-        return sqlSession.selectList(statement, map);
-    }
-
-
-    public static <E extends Entity> int countCriteria(Mapper<E> mapper, Criteria<E> criteria) {
-        val entityInfo = EntityInfoHolder.get(MapperUtils.getEntityType(mapper));
-        val deleteTagColumn = entityInfo.getDeleteTagColumn();
-        if(deleteTagColumn != null) {
-            criteria.where(Criterion.notEq(deleteTagColumn.getPropertyName(), deleteTagColumn.getDeleteTagVal()));
-        }
-        Criteria countCriteria = criteria.clone();
-        //清除对count查询不影响的语句
-        countCriteria.clearSelect().select(Property.countOne().setAlias("value"))
-                .clearOrder()
-                //这句因为可能原来已经有limit了,这里的count查询不需要limit
-                .clearLimit();
-
-        Map<String, Object> map = Maps.newHashMap();
-        map.put("sql", countCriteria.toSql());
-        map.put(CriteriaBoundSql.PARAM_VALUE_KEY_NAME, countCriteria.fetchParams());
-
-        val sqlSession = MapperUtils.getSqlSession(mapper);
-        val statement = fullStatement(mapper, MAPPER_STATEMENT_COUNT_CRITERIA);
-
-        return sqlSession.selectOne(statement, map);
-    }
-
-    public static <E extends Entity> List<E> listPage(Mapper<E> mapper, Page page) {
-
-        val param = Maps.<String, Object>newHashMap();
-        innerListPageHandler(mapper, param);
-
-        val sqlSession = MapperUtils.getSqlSession(mapper);
-        String statement = fullStatement(mapper, MAPPER_STATEMENT_LIST_PAGE);
-
-        return sqlSession.selectList(statement, param, page);
-    }
-
-    public static <E extends Entity, T> List<T> listPage(Mapper<E> mapper, Page page, Class<T> resultType) {
-
-        val param = Maps.<String, Object>newHashMap();
-        assert resultType != null;
-        param.put("resultType", resultType);
-        innerListPageHandler(mapper, param);
-
-        val sqlSession = MapperUtils.getSqlSession(mapper);
-        String statement = fullStatement(mapper, MAPPER_STATEMENT_LIST_PAGE);
-
-        return sqlSession.selectList(statement, param, page);
     }
 
     @RequiredArgsConstructor
@@ -485,33 +559,5 @@ public class MapperHelper {
         }
     }
 
-    public static <E extends Entity<E>> void updateByExample(Mapper<E> mapper, Example<E> example) {
-        doWithLifecycle(()->{
-            val entityInfo = EntityInfoHolder.get(MapperUtils.getEntityType(mapper));
-
-            val columnItemMap = example.getColumnItemMap();
-            val columnUpdateItemList = columnItemMap.entrySet().stream().
-                    map(t -> new ColumnItem<>(t.getKey().getColumnName(), t.getKey().getColumnType(), t.getValue()))
-                    .collect(Collectors.toList());
-
-            //如果没更新的数据,则直接略过
-            if(ObjectUtils.isEmpty(columnUpdateItemList)) {
-                log.debug("没有要更新的数据,{}", example);
-                return;
-            }
-
-            //惟一主键信息
-            Keyed key = example.fetchKeyed();
-            val idItemList = toKeyedList(key, entityInfo);
-
-            val param = Maps.newHashMap();
-            param.put("table", entityInfo.getTable().getTableName());
-            param.put("updateList", columnUpdateItemList);
-            param.put("idList", idItemList);
-
-            val sqlSession = MapperUtils.getSqlSession(mapper);
-            val statement = fullStatement(mapper, MAPPER_STATEMENT_UPDATE_WITH_ID);
-            sqlSession.update(statement, param);
-        }, example.getEntity(), Lifecycle::beforeUpdate, Lifecycle::afterUpdate);
-    }
+    //---------------------------- private method start ------------------------------//
 }
