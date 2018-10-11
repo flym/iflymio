@@ -40,4 +40,14 @@ public class Page extends RowBounds {
         this.page = page;
         this.size = size;
     }
+
+    @Override
+    public int getOffset() {
+        return (page - 1) * size;
+    }
+
+    @Override
+    public int getLimit() {
+        return size;
+    }
 }
