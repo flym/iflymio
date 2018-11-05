@@ -48,7 +48,7 @@ class PartTree(source: String) {
 
     companion object {
         /** 匹配词模板,用于分隔关键字  */
-        private const val KEYWORD_TEMPLATE = "(%s)(?=\\w)"
+        private const val KEYWORD_TEMPLATE = "(%s)(?=(\\p{Lu}|\\P{InBASIC_LATIN}))"
         /** 所支持查询前缀  */
         private const val QUERY_PATTERN = "find|list|get|query"
         /** 查询总数 还未支持  */
