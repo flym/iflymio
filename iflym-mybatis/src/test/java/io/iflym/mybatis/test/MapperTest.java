@@ -13,8 +13,10 @@ import io.iflym.mybatis.domain.util.UpdateUtils;
 import io.iflym.mybatis.example.Example;
 import io.iflym.mybatis.exception.MybatisException;
 import io.iflym.mybatis.mapperx.AssertExt;
+import io.iflym.mybatis.mapperx.domain.AliasedItem;
 import io.iflym.mybatis.mapperx.domain.Item;
 import io.iflym.mybatis.mapperx.domain.SubItem;
+import io.iflym.mybatis.mapperx.mapper.AliasedItemMapper;
 import io.iflym.mybatis.mapperx.mapper.ItemMapper;
 import io.iflym.mybatis.mapperx.mapper.LegacyMapper;
 import io.iflym.mybatis.mapperx.mapper.SubItemMapper;
@@ -42,6 +44,9 @@ public class MapperTest extends BaseTest {
     @Resource
     private SubItemMapper subItemMapper;
 
+    @Resource
+    private AliasedItemMapper aliasedItemMapper;
+
     @Autowired
     private SubXItemMapper subXItemMapperA;
 
@@ -51,6 +56,7 @@ public class MapperTest extends BaseTest {
     @BeforeClass
     private void prepareTable() throws Exception {
         DbUtils.createTable(jdbcTemplate, null, Item.TABLE_NAME, Item.TABLE_DDL);
+        DbUtils.createTable(jdbcTemplate, null, AliasedItem.TABLE_NAME, AliasedItem.TABLE_DDL);
     }
 
     /**
@@ -113,6 +119,21 @@ public class MapperTest extends BaseTest {
         Assert.assertEquals(result.getId(), item.getId());
         Assert.assertEquals(result.getUsername(), item.getUsername());
 
+    }
+
+    /** 验证具有特定转义列的查询是否正常工作 */
+    @Test
+    public void testGetAlasedByKey() {
+        AliasedItem aliasedItem = new AliasedItem(-1, "abc", "desc1", "123");
+        aliasedItemMapper.save(aliasedItem);
+
+        Key key = Key.of(-1);
+        val result = aliasedItemMapper.get(key);
+        Assert.assertNotNull(result);
+
+        Assert.assertEquals(result, aliasedItem);
+        Assert.assertEquals(result.getDesc(), aliasedItem.getDesc());
+        Assert.assertEquals(result.getOrder(), aliasedItem.getOrder());
     }
 
     /**
@@ -224,6 +245,28 @@ public class MapperTest extends BaseTest {
         criteria.order(Order.desc("username"));
         criteria.limit(new Page(2, 2));
 
+    }
+
+    /** 验证crieria查询时针对转义列的情况 */
+    @Test
+    public void testListAliasCriteria() {
+        val aliasItem1 = new AliasedItem(-1, "usernam1", "desc1", "order1");
+        val aliasItem2 = new AliasedItem(-2, "usernam2", "desc2", "order2");
+
+        save(aliasedItemMapper, aliasItem1, aliasItem2);
+
+        val criteria = Criteria.of(AliasedItem.class);
+        criteria.where(Criterion.eq("desc", "desc1"));
+
+        val list = aliasedItemMapper.listCriteria(criteria);
+
+        //应该查询出一条
+        Assert.assertEquals(list.size(), 1);
+
+        val result = list.get(0);
+        Assert.assertEquals(result, aliasItem1);
+        Assert.assertEquals(result.getDesc(), aliasItem1.getDesc());
+        Assert.assertEquals(result.getOrder(), aliasItem1.getOrder());
     }
 
     /**
