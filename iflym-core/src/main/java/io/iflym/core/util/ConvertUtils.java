@@ -80,7 +80,7 @@ public class ConvertUtils {
         addConverter(int.class, short.class, Integer2ShortConverter.INSTANCE);
         addConverter(int.class, Short.class, Integer2ShortConverter.INSTANCE);
         addConverter(Integer.class, short.class, Integer2ShortConverter.INSTANCE);
-        addConverter(Integer.class, Long.class, Integer2ShortConverter.INSTANCE);
+        addConverter(Integer.class, Short.class, Integer2ShortConverter.INSTANCE);
 
         //int2byte
         addConverter(int.class, byte.class, Integer2ByteConverter.INSTANCE);
