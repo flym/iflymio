@@ -1,7 +1,7 @@
 package io.iflym.core.util;
 
 import com.google.common.collect.Lists;
-import io.iflym.core.util.ListUtils;
+import lombok.val;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -35,6 +35,51 @@ public class ListUtilsTest {
         List<Integer> result = ListUtils.map(sourceList, map);
 
         Assert.assertEquals(result, expectValue);
+    }
+
+    @Test
+    public void testFindFirst() throws Exception {
+        //构建一个数字集合，查找第1个>=10和<=50的数字，最终结果应与预期一致
+        List<Integer> sourceList = Lists.newArrayList(1, 2, 3, 20, 30, 70, 80, 90);
+        //剩下的为小于= 50的
+        Predicate<Integer> predicate1 = t -> t <= 50;
+        //剩下的为>= 10的
+        Predicate<Integer> predicate2 = t -> t >= 10;
+
+        //期望值应该为20
+        Integer expect = 20;
+
+        val result = ListUtils.findFirst(sourceList, predicate1, predicate2);
+        Assert.assertEquals(result, expect);
+
+        //查找>100的数字，没有找到，期望值为null
+        Predicate<Integer> predicate3 = t -> t > 100;
+        val gt100Result = ListUtils.findFirst(sourceList, predicate3);
+        Assert.assertNull(gt100Result);
+    }
+
+    @Test
+    public void testFindFirstOptional() throws Exception {
+        //构建一个数字集合，查找第1个>=10和<=50的数字，最终结果应与预期一致
+        List<Integer> sourceList = Lists.newArrayList(1, 2, 3, 20, 30, 70, 80, 90);
+        //剩下的为小于= 50的
+        Predicate<Integer> predicate1 = t -> t <= 50;
+        //剩下的为>= 10的
+        Predicate<Integer> predicate2 = t -> t >= 10;
+
+        //期望值应该为20
+        Integer expect = 20;
+
+        val resultOptional = ListUtils.findFirstOptional(sourceList, predicate1, predicate2);
+        Assert.assertTrue(resultOptional.isPresent(), "没有找到期望的数据");
+        Assert.assertEquals(resultOptional.get(), expect);
+
+        //查找>100的数字，没有找到，期望值为empty
+        Predicate<Integer> predicate3 = t -> t > 100;
+        val gt100ResultOptional = ListUtils.findFirstOptional(sourceList, predicate3);
+        if(gt100ResultOptional.isPresent()) {
+            throw new AssertionError("期望不会找到数据，实际上找到了:" + gt100ResultOptional.get());
+        }
     }
 
 }

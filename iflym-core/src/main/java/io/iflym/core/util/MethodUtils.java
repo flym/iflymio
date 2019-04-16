@@ -11,6 +11,8 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Map;
 
+import static java.lang.invoke.MethodHandles.Lookup.*;
+
 /**
  * 用于简化对于方法的访问和调用
  *
@@ -50,7 +52,9 @@ public class MethodUtils {
         return (T) ExceptionUtils.doFunRethrowE(() -> {
             var handle = SPECIAL_METHOD_HANDLE_MAP.get(method);
             if(handle == null) {
-                handle = LOOKUP_PRIVATE.newInstance(declaringClass, MethodHandles.Lookup.PRIVATE)
+                //保证能访问到所有的方法，而不仅仅是私有的
+                int lookupMode = PRIVATE | PROTECTED | PACKAGE | PUBLIC;
+                handle = LOOKUP_PRIVATE.newInstance(declaringClass, lookupMode)
                         .unreflectSpecial(method, declaringClass);
                 SPECIAL_METHOD_HANDLE_MAP.put(method, handle);
             }
