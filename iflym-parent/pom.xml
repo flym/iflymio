@@ -9,7 +9,7 @@
 
     <properties>
         <spring.version>4.3.12.RELEASE</spring.version>
-        <kotlin.version>1.1.60</kotlin.version>
+        <kotlin.version>1.6.0</kotlin.version>
 
     </properties>
 
